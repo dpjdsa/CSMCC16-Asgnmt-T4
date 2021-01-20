@@ -20,8 +20,9 @@ public class Job {
     // Job configuration
     private Config config;
 
-    // Global objects to store intermediate and final results
-    protected static ConcurrentHashMap<String,Object> map,map1;
+    // Global Threadsafe objects to store intermediate and final results
+    protected static ConcurrentHashMap map,map1;
+    protected static ArrayList record;
 
     // Constructor
     public Job(Config config) {
@@ -30,12 +31,13 @@ public class Job {
 
     // Run the job given the provided configuration
     public void run() throws Exception {
-        // Initialise the maps to store intermediate results
-        map=new ConcurrentHashMap<String,Object>();
-        map1=new ConcurrentHashMap<String,Object>();
-        // Execute the map phase
+        // Initialise the Threadsafe map to store intermediate results
+        map = new ConcurrentHashMap();
+        // Initialise ArrayList to read in file prior to chunking up
+        record = new ArrayList<String>();
+        // Execute the map and reduce phases in sequence
         map();
-        System.out.println("After Map Phase" + map);
+        System.out.println("After Map Phase, output map is: " + map);
     }
 
     // Map each provided file using an instance of the mapper specified by the job configuration
@@ -45,17 +47,7 @@ public class Job {
             mapper.run();
         }
     }
-    // Reduce the intermediate results output by the map phase using an instance of the combiner specified by the job configuration
-    private void combine() throws Exception {
-        Combiner combiner = config.getCombinerInstance(map);
-        combiner.run();
-    }
-    // Reduce the intermediate results output by the map phase using an instance of the reducer specified by the job configuration
-    private void reduce() throws Exception {
-        Reducer reducer = config.getReducerInstance(map1);
-        reducer.run();
-    }
-    public static ConcurrentHashMap<String,Object> getMap(){
+    public static ConcurrentHashMap getMap(){
         return map;      
     }
 }

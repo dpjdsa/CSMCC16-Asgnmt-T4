@@ -21,15 +21,14 @@ public class Config {
     // Input files to process
     private File[] files;
 
-    // Classes to implement job-specific map and reduce functions
-    private Class mapper, reducer, combiner;
+    // Classes to implement job-specific map function
+    private Class mapper;
 
     // Constructor
-    public Config(String[] args, Class mapper, Class reducer, Class combiner) {
+    //public Config(String[] args, Class mapper, Class reducer, Class combiner) {
+    public Config(String[] args, Class mapper){
         init(args);
         this.mapper = mapper;
-        this.reducer = reducer;
-        this.combiner = combiner;
     }
 
     // Initialise a job using the provided arguments
@@ -43,17 +42,18 @@ public class Config {
             this.files[i] = new File(args[i]);
     }
 
-    // Generic file reader returning an iterator cycling through each line of the specified file
-    protected static Iterator read(File file) throws IOException {
-        List record = new ArrayList();
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        while((line = br.readLine()) != null)
-            record.add(line);
-        br.close();
-        return record.iterator();
-    }
-
+    
+    // Generic file reader returning a list containing each line of input file
+    protected static int read(File file) throws IOException {
+    //List record = new ArrayList();
+    BufferedReader br = new BufferedReader(new FileReader(file));
+    String line;
+    while((line = br.readLine()) != null)
+        Job.record.add(line);
+    br.close();
+    System.out.println("Size of file ="+Job.record.size());
+    return Job.record.size();
+}
     // Return the list of files to process
     protected File[] getFiles() {
         return this.files;
@@ -64,18 +64,5 @@ public class Config {
         Mapper mapper = (Mapper) this.mapper.getConstructor().newInstance();
         mapper.setFile(file);
         return mapper;
-    }
-
-    // Using reflection get an instance of the reducer operating on a chunk of the intermediate results
-    protected Reducer getReducerInstance(ConcurrentHashMap results) throws Exception {
-        Reducer reducer = (Reducer) this.reducer.getConstructor().newInstance();
-        reducer.setRecords(results);
-        return reducer;
-    }
-    // Using reflection get an instance of the combiner operating on a chunk of the intermediate results
-    protected Combiner getCombinerInstance(ConcurrentHashMap results) throws Exception {
-        Combiner combiner = (Combiner) this.combiner.getConstructor().newInstance();
-        combiner.setRecords(results);
-        return combiner;
     }
 }

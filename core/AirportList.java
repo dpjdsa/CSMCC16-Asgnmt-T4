@@ -18,17 +18,17 @@ public class AirportList {
         apList=new HashMap<>();
         MAX=MaxIn;
     }
-    // Adds airport to airport list
+    //Add airport to airport list
     public void addAirport(Airport airportIn)
     {
         apList.put(airportIn.getCode(),airportIn);
     }
-    // Gets size of airport list
+    // Get size of airport list
     public int size()
     {
         return apList.size();
     }
-    // Getter methods for airport corresponding to given airport code
+    // Getter methods based on airport code
     public String getName(String airportCodeIn)
     {
         return apList.get(airportCodeIn).getName();
@@ -41,12 +41,11 @@ public class AirportList {
     {
         return apList.get(airportCodeIn).getLon();
     }
-    // Returns a set of airport codes
+    // Get keys of airport list as a set
     public Set<String> getKeys()
     {
         return apList.keySet();
     }
-    // Used for output to terminal
     public String toString()
     {
         return apList.toString();

@@ -8,35 +8,30 @@ import java.util.regex.*;
 import java.io.*;
 import java.util.concurrent.*;
 import java.util.HashMap;
-import java.util.Date;
-import java.text.*;
-import java.math.*;
 /**
- * Assignment Objective 4:
- * Reads in the airport list, the passenger flight records and using the airport codes
- * calculates nautical mile distance for each flight.
- * A single threaded solution which creates a mapper for each file and a reducer for each unique word,
+ * Assignment Task 4:
+ * Calculates the line of sight distance for each flight.
+ * A multi-threaded solution which creates a mapper for the input file.
  * each processed sequentially.
  *
  * To run:
  * java Task_4.java <files>
- *     i.e. java  Task_4.java AComp_Passenger_data_no_error.csv
+ *     i.e. java Task_4.java AComp_Passenger_data_no_error.csv
  *
  * Potential Areas for improvement:
  * 
- * - Multi-threading
  * - Error checking and handling
  * 
  *   
  */
 class Task_4
     {
-    // Configure and set-up the job using command line arguments specifying input files and job-specific mapper and
-    // reducer functions
+    // Configure and set-up the job using command line arguments specifying
+    // input files and job-specific mapper function.
     private static AirportList aList=new AirportList(30);
     public static void main(String[] args) throws Exception {
         ReadAirports();
-        Config config = new Config(args, mapper.class, reducer.class, combiner.class);
+        Config config = new Config(args, mapper.class);
         Job job = new Job(config);
         job.run();
         DisplayFlightMiles(Job.getMap());
@@ -68,57 +63,28 @@ class Task_4
         System.out.println(aList);
         System.out.println("*** no of airports is: "+aList.size());
     }
-    public static void ReadPassengers()
-    {
-        String csvFile2="AComp_Passenger_data_no_error.csv";
-        BufferedReader br = null;
-        String line = "";
-        PassengerList pList=new PassengerList();
-        try {
-                br = new BufferedReader(new FileReader(csvFile2));
-                while((line=br.readLine())!=null){
-                    if (line.length()>0){
-                        String[] Field = line.split(",");
-                        String passid=Field[0];
-                        String fltid=Field[1];
-                        String frmapt=Field[2];
-                        String dstapt=Field[3];
-                        double deptime=Double.parseDouble(Field[4]);
-                        double flttime=Double.parseDouble(Field[5]);
-                        Passenger passenger = new Passenger(passid,fltid,frmapt,dstapt,deptime,flttime);
-                        pList.addPassenger(passenger);
-                    }
-                }
-                br.close();
-        } catch (IOException e) {
-            System.out.println("IO Exception");
-            e.printStackTrace();
-        }
-        System.out.println(pList);
-    }
     
     // Function to calculate Nautical Mile distances based on https://www.geodata.source/developers/java accessed at 11.30am on 28th December 2020
     
     private static double CalcNauticalMiles(double latAIn, double lonAIn,double latBIn,double lonBIn ){
-            double theta = lonAIn - lonBIn;
-			double dist = Math.sin(Math.toRadians(latAIn)) * Math.sin(Math.toRadians(latBIn)) + Math.cos(Math.toRadians(latAIn)) * Math.cos(Math.toRadians(latBIn)) * Math.cos(Math.toRadians(theta));
-			dist = Math.acos(dist);
-			dist = Math.toDegrees(dist);
-            dist = dist * 60 * 1.1515*0.8684;
-            return dist;
+        double theta = lonAIn - lonBIn;
+		double dist = Math.sin(Math.toRadians(latAIn)) * Math.sin(Math.toRadians(latBIn)) + Math.cos(Math.toRadians(latAIn)) * Math.cos(Math.toRadians(latBIn)) * Math.cos(Math.toRadians(theta));
+		dist = Math.acos(dist);
+		dist = Math.toDegrees(dist);
+        dist = dist * 60 * 1.1515*0.8684;
+        return dist;
     }
     private static void DisplayFlightMiles(ConcurrentHashMap<String,Object> mapIn){
         for (Map.Entry<String,Object> entry : mapIn.entrySet()){
             String key = entry.getKey();
             double value=Double.parseDouble(entry.getValue().toString());
-            System.out.format("Flight: %-20s  Nautical Miles: %.0f\n",key,value);
+            System.out.format("Flight: %-20s Nautical Miles: %.0f\n",key,value);
         }
     }
-
-    // FromAirportCode+Flightid count mapper:
-    // Output nautical miles for each occurrence of FlightId+PassengerId.
-    // KEY = FlightId+PassengerId
-    // VALUE = Flight nautical miles
+    // Flightid mapper:
+    // Output nautical miles for each unique occurrence of Flightid.
+    // KEY = Flightid
+    // VALUE = Flight Nautical Miles
     public static class mapper extends Mapper {
         public void map(String line) {
             String[] Fields=line.split(",");
@@ -128,30 +94,6 @@ class Task_4
             lonA=aList.getLon(Fields[2]);
             lonB=aList.getLon(Fields[3]);
             EmitIntermediate2(Fields[1],CalcNauticalMiles(latA, lonA, latB, lonB));
-        }
-    }
-    // Airport Code count combiner (not used for this task):
-    // Output the total number of occurrences of each unique Aiport Code
-    // KEY = FromAirport Code
-    // VALUE = count
-    public static class combiner extends Combiner {
-        public void combine(String key, List values) {
-            //int count = 0;
-            //for (Object value : values) count += (int) value;
-            EmitIntermediate3(key.toString().substring(0,3), values);
-        }
-    }
-    // Airport Code count reducer (not used for this task):
-    // Output the total number of occurrences of each unique Aiport Code
-    // KEY = FromAirport Code
-    // VALUE = count
-    public static class reducer extends Reducer {
-        public void reduce(String key, List values) {
-            int count = 0;
-            for (Object lst : values){
-                for (Object value : (List) lst) count += (int) value;
-                Emit(key, count);
-            }
         }
     }
 }
