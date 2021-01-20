@@ -8,60 +8,38 @@ import java.util.regex.*;
 import java.io.*;
 import java.util.concurrent.*;
 import java.util.HashMap;
+import java.util.Date;
+import java.text.*;
 /**
- * Assignment Task 4:
+ * Assignment:
  * Calculates the line of sight distance for each flight.
- * A multi-threaded solution which creates a mapper for the input file.
- * each processed sequentially.
+ * A multi-threaded solution which creates a mapper for the input file which maps each flight onto its nautical 
+ * mile distance, each processed sequentially. Also error checks and corrects file input.
  *
  * To run:
  * java Task_4.java <files>
- *     i.e. java Task_4.java AComp_Passenger_data_no_error.csv
- *
- * Potential Areas for improvement:
+ *     i.e. java Task_4.java Top30_airports_LatLong.csv AComp_Passenger_data.csv
  * 
- * - Error checking and handling
  * 
- *   
+ * 
+ * 
+ * 
+ *  
  */
 class Task_4
     {
-    // Configure and set-up the job using command line arguments specifying
-    // input files and job-specific mapper function.
+    // Configure and set-up the job using command line arguments specifying input files and job-specific mapper and
+    // reducer functions
     private static AirportList aList=new AirportList(30);
+    private static PassengerList pList=new PassengerList();
     public static void main(String[] args) throws Exception {
-        ReadAirports();
-        Config config = new Config(args, mapper.class);
-        Job job = new Job(config);
+        ReadAndErrorCheck.run(args);
+        aList=ReadAndErrorCheck.getAList();
+        pList=ReadAndErrorCheck.getPList();
+        Config config = new Config(mapper.class);
+        Job job = new Job(config,pList);
         job.run();
         DisplayFlightMiles(Job.getMap());
-    }
-    // Read in airports file
-    public static void ReadAirports()
-    {
-        String csvFile1="Top30_airports_LatLong.csv";
-        BufferedReader br = null;
-        String line = "";
-        try {
-                br = new BufferedReader(new FileReader(csvFile1));
-                while((line=br.readLine())!=null){
-                    if (line.length()>0){
-                        String[] Field = line.split(",");
-                        String name=Field[0];
-                        String code=Field[1];
-                        double lat=Double.parseDouble(Field[2]);
-                        double lon=Double.parseDouble(Field[3]);
-                        Airport airport = new Airport(name,code,lat,lon);
-                        aList.addAirport(airport);
-                    }
-                }
-                br.close();
-        } catch (IOException e) {
-            System.out.println("IO Exception");
-            e.printStackTrace();
-        }
-        System.out.println(aList);
-        System.out.println("*** no of airports is: "+aList.size());
     }
     
     // Function to calculate Nautical Mile distances based on https://www.geodata.source/developers/java accessed at 11.30am on 28th December 2020
