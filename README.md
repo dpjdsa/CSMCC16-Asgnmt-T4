@@ -4,8 +4,8 @@ Repository of Code for Task 4 of the CSMCC16 Assignment
 Assignment Objective 4:
 Reads in the airport list, the passenger flight records and using the airport codes
 calculates nautical mile distance for each flight.
-A single threaded solution which creates a mapper for each file and a reducer for each unique word,
-each processed sequentially.
+A multi-threaded solution which creates a mapper for the file which then calculates the nautical mile distance
+using a number of mapper threads.
 
 To run:
 java Task_4.java <files>
