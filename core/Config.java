@@ -14,8 +14,8 @@ import java.util.concurrent.*;
  * Stores the file specifications provided at run-time and
  * uses reflection to set objective-specific mapper and reducer classes.
  *
- * Areas for improvement:
- * - Output to file or implement a user interface to display results
+ * @author BD837672
+ * @version 22nd January 2021
  */
 public class Config {
     // Input files to process
@@ -50,7 +50,6 @@ public class Config {
     //protected Mapper getMapperInstance(File file) throws Exception {
     protected Mapper getMapperInstance() throws Exception {
         Mapper mapper = (Mapper) this.mapper.getConstructor().newInstance();
-        //mapper.setFile(file);
         return mapper;
     }
 }
